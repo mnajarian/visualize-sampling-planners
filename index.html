@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style type="text/css">
+      body {
+        font-family: Helvetica;
+	text-align: center;
+      }
+      #top {
+	padding-left: 10px;
+	margin-bottom: 5px;
+	margin-right: auto;
+	margin-left: auto;
+	background: #bbb;
+	border: 5px solid #cccdcc;
+	width: 686px;
+      }
+      #box {
+	margin-right: auto;
+	margin-left: auto;
+	background: #bbb;
+	border: 5px solid #cccdcc;
+	width: 700px;
+	height: 500px;
+      }
+      #draw {
+	width: 500px;
+	background: #ddd;
+	height: 500px;
+	float: left;
+      }
+      #right{
+	float: right;
+	width: 200px;
+      }
+      #mode {
+	background: #ddd;
+	width: 180px;
+	padding: 0px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 10px;
+	text-align: center;
+	font-size: 14px;
+	padding-top: 5px;
+	padding-bottom: 10px;
+      }
+      #action {
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 5px;
+	margin-top: 10px;
+	font-family: helvetica;
+	background: #ddd;
+	width: 180px;
+	padding: 0px;
+	padding-top: 5px;
+	padding-bottom: 10px;
+      }
+      h4 {
+	margin: 10px;
+	margin-left: auto;
+	margin-right: auto;
+	font-size: 16px;
+	padding: 0px;
+	text-align: center;
+      }
+      #drawR, #drawO {
+	margin-left: 2.5em;
+      }
+      input {
+	width: 40px;
+	margin-left: 10px;
+      }
+      label.label {
+	font-size: 12px;
+	margin-top: 4px;
+      }
+      button {
+	width: 80%;
+	padding: .5em;
+	margin: 1px;
+      }
+      #inputs {
+	text-align: right;
+	padding-right: 35px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="top">
+      <h2>Probabilistic Roadmap Interactive Demo</h2>
+    </div>
+    <div id="box">
+      <div id="draw">
+				
+		
+	  </div>
+      <div id="right">
+		<div id="mode">
+		  <h4>Instructions</h4>
+		  <div id="instructions">Click to draw obstacles.</div>
+		</div>
+		<div id="action">
+		  <h4>Actions</h4>
+		  <div id="inputs">
+			<label label-for="#samples" class="label">Samples:</label><input type="number" id="samples" value="15"/><br>
+			<label label-for="#neighbors" class="label">Neighbors:</label><input type="number" id="neighbors" value="3"/><br>
+		  </div>
+		  <button id="calc">Grow Roadmap</button><br>
+		  <button id="route">Find Path</button><br>
+		  <button id="clearroadmap">Clear Roadmap</button><br>
+		  <button id="clear">Clear All</button><br>
+		</div>
+	  </div>
+	</div>
+	
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-661332-5");
+pageTracker._trackPageview();
+</script>
+
+  </body>
+</html>
