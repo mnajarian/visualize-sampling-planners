@@ -155,6 +155,7 @@ function beginDraw(color, r, x, y) {
 }
 
 function computeRoadmap(roadmap, obstacles) {
+  console.log(obstacles);
   var numNodes = parseInt($("#samples").val());
   var numNeighbors = parseInt($("#neighbors").val());
   var nodes = [];
@@ -315,136 +316,122 @@ function drawPath(goal, path, start, r) {
   path.attr("stroke", "#00f").attr("stroke-width", 3);
   return path
 }
+
+
+
 $(function() {
-  var r = Raphael("draw-1", 348, 500);
-  var raph = r;
+  var r1 = Raphael("draw-1", 348, 500);
+  var r2 = Raphael("draw-2", 348, 500);
+  // var raph = r_1;
   var drawingState = "none";
   var update;
-  var roadmap = null;
-  var drawnRoadmap = [];
+  var roadmap1 = null;
+  var roadmap2 = null;
+  var drawnRoadmap1 = [];
+  var drawnRoadmap2 = [];
   var obstacles = [];
   var start = [100, 450];
   var goal = [300, 100];
-  var drawnPath = null;
+  var drawnPath1 = null;
+  var drawnPath2 = null;
 
   function drawStartAndGoal() {
-    r.circle(start[0], start[1], 4).attr("fill", "#008000");
-    r.circle(goal[0], goal[1], 4).attr("fill", "#ff0000")
+    r1.circle(start[0], start[1], 4).attr("fill", "#008000");
+    r1.circle(goal[0], goal[1], 4).attr("fill", "#ff0000");
+    r2.circle(start[0], start[1], 4).attr("fill", "#008000");
+    r2.circle(goal[0], goal[1], 4).attr("fill", "#ff0000");
   }
   drawStartAndGoal();
+
+  function drawObstacle(r, points, color){
+    var pathstring = "M" + points[0][0] + "," + points[0][1];
+    for (var i = 1; i < points.length; i++) pathstring += "L" + points[i][0] + "," + points[i][1];
+    points.remove(-1);
+    r.path(pathstring).attr("fill", color).toBack(); 
+  };
+
   $("#draw-1").click(function(e) {
     if (drawingState == "none") {
-      update = beginDraw("#f00", r, e.offsetX, e.offsetY);
+      update = beginDraw("#f00", r1, e.offsetX, e.offsetY);
       drawingState = "drawing"
     } else if (drawingState == "drawing") {
       var result =
         update(e.offsetX, e.offsetY);
       if (result != 0) {
         obstacles.push(result);
-        drawingState = "none"
+        drawingState = "none";
+        drawObstacle(r2, result, "#008000")
       }
     }
   });
-  $("#calc").click(function() {
-    $("#instructions").html("Clear roadmap to draw");
-    roadmap = computeRoadmap(roadmap, obstacles);
-    for (var i = 0; i < drawnRoadmap.length; i++) drawnRoadmap[i].remove();
-    drawnRoadmap = drawRoadmap(roadmap, r);
-    drawingState = "disabled"
-    if (drawnPath != null) drawnPath.remove();
-    if (roadmap == null) return;
-    var path = calcShortestPath(start, goal, roadmap);
-    drawnPath = drawPath(goal, path, start, r)
-  });
-  $("#clear").click(function() {
-    $("#instructions").html("Click to draw obstacles");
-    r.clear();
-    sums = [];
-    obstacles = [];
-    opaths = [];
-    robot = null;
-    dot = null;
-    drawnPath = null;
-    roadmap = null;
-    drawnRoadmap = [];
-    drawingState = "none";
-    drawStartAndGoal()
-  });
-  $("#clearroadmap").click(function() {
-    $("#instructions").html("Click to draw obstacles");
-    if (drawnPath != null) drawnPath.remove();
-    drawnPath = null;
-    roadmap = null;
-    if (drawnRoadmap != [])
-      for (var i = 0; i < drawnRoadmap.length; i++) drawnRoadmap[i].remove();
-    drawingState = "none";
-    drawnRoadmap = []
-  })
-});
-
-$(function() {
-  var r = Raphael("draw-2", 348, 500);
-  var raph = r;
-  var drawingState = "none";
-  var update;
-  var roadmap = null;
-  var drawnRoadmap = [];
-  var obstacles = [];
-  var start = [100, 450];
-  var goal = [300, 100];
-  var drawnPath = null;
-
-  function drawStartAndGoal() {
-    r.circle(start[0], start[1], 4).attr("fill", "#008000");
-    r.circle(goal[0], goal[1], 4).attr("fill", "#ff0000")
-  }
-  drawStartAndGoal();
   $("#draw-2").click(function(e) {
     if (drawingState == "none") {
-      update = beginDraw("#f00", r, e.offsetX, e.offsetY);
+      update = beginDraw("#f00", r2, e.offsetX, e.offsetY);
       drawingState = "drawing"
     } else if (drawingState == "drawing") {
-      var result =
-        update(e.offsetX, e.offsetY);
+      var result = update(e.offsetX, e.offsetY);
       if (result != 0) {
         obstacles.push(result);
-        drawingState = "none"
+        drawingState = "none";
+        drawObstacle(r1, result, "#008000")
       }
     }
   });
   $("#calc").click(function() {
     $("#instructions").html("Clear roadmap to draw");
-    roadmap = computeRoadmap(roadmap, obstacles);
-    for (var i = 0; i < drawnRoadmap.length; i++) drawnRoadmap[i].remove();
-    drawnRoadmap = drawRoadmap(roadmap, r);
+    roadmap1 = computeRoadmap(roadmap1, obstacles);
+    for (var i = 0; i < drawnRoadmap1.length; i++) drawnRoadmap1[i].remove();
+    drawnRoadmap1 = drawRoadmap(roadmap1, r1);
     drawingState = "disabled"
-    if (drawnPath != null) drawnPath.remove();
-    if (roadmap == null) return;
-    var path = calcShortestPath(start, goal, roadmap);
-    drawnPath = drawPath(goal, path, start, r)
+    if (drawnPath1 != null) drawnPath1.remove();
+    if (roadmap1 == null) return;
+    var path = calcShortestPath(start, goal, roadmap1);
+    drawnPath1 = drawPath(goal, path, start, r1);
+
+    roadmap2 = computeRoadmap(roadmap2, obstacles);
+    for (var i = 0; i < drawnRoadmap2.length; i++) drawnRoadmap2[i].remove();
+    drawnRoadmap2 = drawRoadmap(roadmap2, r2);
+    drawingState = "disabled"
+    if (drawnPath2 != null) drawnPath2.remove();
+    if (roadmap2 == null) return;
+    var path = calcShortestPath(start, goal, roadmap2);
+    drawnPath2 = drawPath(goal, path, start, r2);
+
   });
   $("#clear").click(function() {
     $("#instructions").html("Click to draw obstacles");
-    r.clear();
+    r1.clear();
+    r2.clear();
     sums = [];
     obstacles = [];
     opaths = [];
     robot = null;
     dot = null;
-    drawnPath = null;
-    roadmap = null;
-    drawnRoadmap = [];
+    drawnPath1 = null;
+    drawPath2 = null;
+    roadmap1 = null;
+    roadmap2 = null;
+    drawnRoadmap1 = [];
+    drawnRoadmap2 = [];
     drawingState = "none";
     drawStartAndGoal()
   });
   $("#clearroadmap").click(function() {
     $("#instructions").html("Click to draw obstacles");
-    if (drawnPath != null) drawnPath.remove();
-    drawnPath = null;
-    roadmap = null;
-    if (drawnRoadmap != [])
-      for (var i = 0; i < drawnRoadmap.length; i++) drawnRoadmap[i].remove();
+    if (drawnPath1 != null) drawnPath1.remove();
+    drawnPath1 = null;
+    roadmap1 = null;
+    if (drawnRoadmap1 != [])
+      for (var i = 0; i < drawnRoadmap1.length; i++) drawnRoadmap1[i].remove();
     drawingState = "none";
-    drawnRoadmap = []
+    drawnRoadmap1 = [];
+
+    if (drawnPath2 != null) drawnPath2.remove();
+    drawnPath2 = null;
+    roadmap2 = null;
+    if (drawnRoadmap2 != [])
+      for (var i = 0; i < drawnRoadmap2.length; i++) drawnRoadmap2[i].remove();
+    drawingState = "none";
+    drawnRoadmap2 = [];
   })
 });
