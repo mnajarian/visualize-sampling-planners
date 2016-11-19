@@ -155,7 +155,6 @@ function beginDraw(color, r, x, y) {
 }
 
 function computeRoadmap(roadmap, obstacles) {
-  console.log(obstacles);
   var numNodes = parseInt($("#samples").val());
   var numNeighbors = parseInt($("#neighbors").val());
   var nodes = [];
@@ -195,12 +194,12 @@ function drawRoadmap(roadmap, r) {
   var nodes = roadmap["nodes"];
   for (var i = 0; i < nodes.length; i++) {
     var p = nodes[i];
-    drawn.push(r.circle(p[0], p[1], 2));
+    drawn.push(r.circle(p[0], p[1], 2).attr("stroke", "#32cd32"));
     var list = roadmap["adjacencyList"][i];
     for (var j = 0; j < list.length; j++) {
       var dest = nodes[list[j]];
       var pathString = "M" + p[0] + "," + p[1] + "L" + dest[0] + "," + dest[1];
-      drawn.push(r.path(pathString))
+      drawn.push(r.path(pathString).attr("stroke", "#008080"))
     }
   }
   return drawn
@@ -305,7 +304,11 @@ function calcShortestPath(start, goal, roadmap) {
     if (curr == snode || curr == null) break
   }
   path.push(nodes[snode]);
-  return path
+  if (path[1] == null){
+    return null;
+  } else {
+    return path;
+  } 
 }
 
 function drawPath(goal, path, start, r) {
@@ -313,7 +316,7 @@ function drawPath(goal, path, start, r) {
   for (var i = 0; i < path.length; i++) p += "L" + path[i][0] + "," + path[i][1];
   p += "L" + start[0] + "," + start[1];
   var path = r.path(p);
-  path.attr("stroke", "#00f").attr("stroke-width", 3);
+  path.attr("stroke", "#ff0065").attr("stroke-width", 2);
   return path
 }
 
@@ -322,7 +325,6 @@ function drawPath(goal, path, start, r) {
 $(function() {
   var r1 = Raphael("draw-1", 348, 500);
   var r2 = Raphael("draw-2", 348, 500);
-  // var raph = r_1;
   var drawingState = "none";
   var update;
   var roadmap1 = null;
@@ -336,17 +338,17 @@ $(function() {
   var drawnPath2 = null;
 
   function drawStartAndGoal() {
-    r1.circle(start[0], start[1], 4).attr("fill", "#008000");
-    r1.circle(goal[0], goal[1], 4).attr("fill", "#ff0000");
-    r2.circle(start[0], start[1], 4).attr("fill", "#008000");
-    r2.circle(goal[0], goal[1], 4).attr("fill", "#ff0000");
+    r1.circle(start[0], start[1], 4).attr("fill", "#ffff00");
+    r1.circle(goal[0], goal[1], 4).attr("fill", "#ffc0cb");
+    r2.circle(start[0], start[1], 4).attr("fill", "#ffff00");
+    r2.circle(goal[0], goal[1], 4).attr("fill", "#ffc0cb");
   }
   drawStartAndGoal();
 
   function drawObstacle(r, points, color){
     var pathstring = "M" + points[0][0] + "," + points[0][1];
     for (var i = 1; i < points.length; i++) pathstring += "L" + points[i][0] + "," + points[i][1];
-    // points.remove(-1);
+    pathstring += "Z";
     r.path(pathstring).attr("fill", color).toBack(); 
   };
 
@@ -385,8 +387,10 @@ $(function() {
     drawingState = "disabled"
     if (drawnPath1 != null) drawnPath1.remove();
     if (roadmap1 == null) return;
-    var path = calcShortestPath(start, goal, roadmap1);
-    drawnPath1 = drawPath(goal, path, start, r1);
+    var path1 = calcShortestPath(start, goal, roadmap1);
+    if (path1 != null){
+        drawnPath1 = drawPath(goal, path1, start, r1);
+    }
 
     roadmap2 = computeRoadmap(roadmap2, obstacles);
     for (var i = 0; i < drawnRoadmap2.length; i++) drawnRoadmap2[i].remove();
@@ -394,8 +398,10 @@ $(function() {
     drawingState = "disabled"
     if (drawnPath2 != null) drawnPath2.remove();
     if (roadmap2 == null) return;
-    var path = calcShortestPath(start, goal, roadmap2);
-    drawnPath2 = drawPath(goal, path, start, r2);
+    var path2 = calcShortestPath(start, goal, roadmap2);
+    if (path2 != null){
+      drawnPath2 = drawPath(goal, path2, start, r2);
+    }
 
   });
   $("#clear").click(function() {
