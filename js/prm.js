@@ -346,7 +346,7 @@ $(function() {
   function drawObstacle(r, points, color){
     var pathstring = "M" + points[0][0] + "," + points[0][1];
     for (var i = 1; i < points.length; i++) pathstring += "L" + points[i][0] + "," + points[i][1];
-    points.remove(-1);
+    // points.remove(-1);
     r.path(pathstring).attr("fill", color).toBack(); 
   };
 
@@ -360,7 +360,7 @@ $(function() {
       if (result != 0) {
         obstacles.push(result);
         drawingState = "none";
-        drawObstacle(r2, result, "#008000")
+        drawObstacle(r2, result, "#ff0000")
       }
     }
   });
@@ -373,7 +373,7 @@ $(function() {
       if (result != 0) {
         obstacles.push(result);
         drawingState = "none";
-        drawObstacle(r1, result, "#008000")
+        drawObstacle(r1, result, "#ff0000")
       }
     }
   });
