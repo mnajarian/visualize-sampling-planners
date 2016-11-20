@@ -40,23 +40,23 @@
         float: right;
       }
       #bottom{
-	    height: 200px;
+	    height: 100px;
         width: 710px;
         margin-right: auto;
         margin-left: auto;
+        margin-bottom: auto;
+        margin-top: auto;
+        background: #ddd;
       }
       #action {
-	    margin-left: auto;
-	    margin-right: auto;
-	    margin-bottom: 5px;
-	    margin-top: 10px;
-	    font-family: helvetica;
-	    background: #ddd;
-	    width: 710px;
+	    width: 235px;
         height: 100px;
-	    padding: 0px;
-	    padding-top: 5px;
-	    padding-bottom: 10px;
+        float: left;
+      }
+      #selection{
+        width: 235px;
+        height: 100px;
+        float: left; 
       }
       h4 {
 	    margin: 10px;
@@ -78,14 +78,15 @@
 	    margin-top: 4px;
       }
       button {
-	    width: 125px;
+	    width: 200px;
 	    padding: .5em;
 	    margin: 1px;
-        float: left;
+        float: right;
       }
       #inputs {
-	    text-align: right;
-	    padding-right: 35px;
+        width: 235px;
+        height: 100px;
+        float: left;
       }
     </style>
   </head>
@@ -104,14 +105,19 @@
       </div>
 	</div>	
     <div id="bottom">
+      <div id="selection">
+        <h5>Select planner comparison</h5>
+          <input type="radio" id="kprm*" checked="checked"/>
+          <label for = "kprm*">k-PRM/k-PRM*</label>
+      </div>
+      <div id="inputs">
+        <label label-for="#samples" class="label">Samples:</label><input type="number" id="samples" value="15"/><br>
+        <label label-for="#neighbors" class="label">Neighbors:</label><input type="number" id="neighbors" value="3"/><br>
+      </div>
       <div id="action">
-        <div id="inputs">
-          <label label-for="#samples" class="label">Samples:</label><input type="number" id="samples" value="15"/>
-          <label label-for="#neighbors" class="label">Neighbors:</label><input type="number" id="neighbors" value="3"/>
-          <button id="calc">Grow Roadmap</button>
-          <button id="clearroadmap">Clear Roadmap</button>
-          <button id="clear">Clear All</button>
-        </div>
+        <button id="calc">Grow Roadmap</button>
+        <button id="clearroadmap">Clear Roadmap</button>
+        <button id="clear">Clear All</button>
       </div>
     </div>
 
