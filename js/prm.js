@@ -154,11 +154,25 @@ function beginDraw(color, r, x, y) {
   return addPoint
 }
 
-function computeRoadmap(roadmap, obstacles) {
+function computeRoadmap(roadmap, obstacles, variant="k-prm") {
+  // extends an existing roadmap with given obstacles, 
+  // based on the variant of sampling-based motion planner
   var numNodes = parseInt($("#samples").val());
-  var numNeighbors = parseInt($("#neighbors").val());
+  // var numNeighbors = parseInt($("#neighbors").val());
   var nodes = [];
   if (roadmap != null) nodes = roadmap["nodes"];
+  var numNeighbors = null;
+  if (variant == "k-prm"){
+    numNeighbors = parseInt($("#neighbors").val());
+  } else if (variant == "k-prm-star"){
+    if (nodes.length > 0){
+      numNeighbors = 2 * Math.E * (Math.log(nodes.length));
+      console.log(numNeighbors);
+    } else {
+      numNeighbors = parseInt($("#neighbors").val());
+      console.log(numNeighbors);
+    }
+  }
   var triangles = triangulateAll(obstacles);
   for (var i = 0; i < numNodes; i++) nodes.push(getNewRandomNode(triangles));
   var adjacencyList = [];
@@ -381,7 +395,7 @@ $(function() {
   });
   $("#calc").click(function() {
     $("#instructions").html("Clear roadmap to draw");
-    roadmap1 = computeRoadmap(roadmap1, obstacles);
+    roadmap1 = computeRoadmap(roadmap1, obstacles, variant="k-prm");
     for (var i = 0; i < drawnRoadmap1.length; i++) drawnRoadmap1[i].remove();
     drawnRoadmap1 = drawRoadmap(roadmap1, r1);
     drawingState = "disabled"
@@ -392,7 +406,7 @@ $(function() {
         drawnPath1 = drawPath(goal, path1, start, r1);
     }
 
-    roadmap2 = computeRoadmap(roadmap2, obstacles);
+    roadmap2 = computeRoadmap(roadmap2, obstacles, variant="k-prm-star");
     for (var i = 0; i < drawnRoadmap2.length; i++) drawnRoadmap2[i].remove();
     drawnRoadmap2 = drawRoadmap(roadmap2, r2);
     drawingState = "disabled"
