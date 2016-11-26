@@ -15,8 +15,6 @@
 	    margin-bottom: 5px;
 	    margin-right: auto;
 	    margin-left: auto;
-	    background: #bbb;
-	    border: 5px solid #cccdcc;
 	    width: 686px;
       }
       #box {
@@ -52,17 +50,24 @@
 	    width: 235px;
         height: 100px;
         float: left;
+        margin-top: 10px;
       }
       #selection{
         width: 235px;
         height: 100px;
         float: left; 
       }
+      h3 {
+        font-size: 24px;
+        font-weight: 200px;
+        line-height: 1.5em;
+        font-family: sans-serif;
+      }
       h4 {
 	    margin: 10px;
 	    margin-left: auto;
 	    margin-right: auto;
-	    font-size: 16px;
+	    font-size: 12px;
 	    padding: 0px;
 	    text-align: center;
       }
@@ -71,7 +76,7 @@
       }
       input {
 	    width: 40px;
-	    margin-left: 10px;
+        margin: 5px;
       }
       label.label {
 	    font-size: 12px;
@@ -87,12 +92,13 @@
         width: 235px;
         height: 100px;
         float: left;
+        margin-top: 10px;
       }
     </style>
   </head>
   <body>
     <div id="top">
-      <h2>Visualization of Optimal Sampling-based Motion Planners</h2>
+      <h3><span>Visualization of Optimal Sampling-based Motion Planners</span></h3>
     </div>
     <div id="box">
       <div id="draw-1">
@@ -106,14 +112,14 @@
 	</div>	
     <div id="bottom">
       <div id="selection">
-        <h5>Select planner comparison</h5>
+        <h4>Select planner comparison</h4>
         <select>
           <option value="k-prm">k-PRM vs. k-PRM*</option>
-          <option value="test">TEST</option>
+          <option value="rrt">RRT vs. RRT*</option>
         </select>
       </div>
       <div id="inputs">
-        <label label-for="#samples" class="label">Samples:</label><input type="number" id="samples" value="15"/><br>
+        <label label-for="#samples" class="label">Samples:  &nbsp </label><input type="number" id="samples" value="15"/><br>
         <label label-for="#neighbors" class="label">Neighbors:</label><input type="number" id="neighbors" value="15"/><br>
       </div>
       <div id="action">
