@@ -157,7 +157,6 @@ function beginDraw(color, r, x, y) {
 function newRandomNodes(obstacles) {
   var numNodes = parseInt($("#samples").val());
   var nodes = [];
-  // if (roadmap != null) nodes = roadmap["nodes"];
   var triangles = triangulateAll(obstacles);
   for (var i = 0; i < numNodes; i++) nodes.push(getNewRandomNode(triangles));  
   return nodes;
@@ -166,7 +165,6 @@ function newRandomNodes(obstacles) {
 function computeRoadmap(roadmap, obstacles, newNodes, variant="k-prm") {
   // extends an existing roadmap with given obstacles, 
   // based on the variant of sampling-based motion planner
-
 
   // var numNodes = parseInt($("#samples").val());
   var nodes = [];
@@ -360,6 +358,9 @@ $(function() {
   var goal = [300, 100];
   var drawnPath1 = null;
   var drawnPath2 = null;
+  var panel1Variant = "k-prm";
+  var panel2Variant = "k-prm-star";
+  $("#instructions").html("Click to draw obstacles");
 
   function drawStartAndGoal() {
     r1.circle(start[0], start[1], 4).attr("fill", "#ffff00");
@@ -375,6 +376,37 @@ $(function() {
     pathstring += "Z";
     r.path(pathstring).attr("fill", color).toBack(); 
   };
+
+  function clearAll(){
+    $("#instructions").html("Click to draw obstacles");
+    r1.clear();
+    r2.clear();
+    sums = [];
+    obstacles = [];
+    opaths = [];
+    robot = null;
+    dot = null;
+    drawnPath1 = null;
+    drawPath2 = null;
+    roadmap1 = null;
+    roadmap2 = null;
+    drawnRoadmap1 = [];
+    drawnRoadmap2 = [];
+    drawingState = "none";
+    drawStartAndGoal();
+  }
+
+  $("#sampler-selection").change(function() {
+    if ($(this).val() == "rrt"){
+      panel1Variant = "rrt";
+      panel2Variant = "rrt-star";
+    }
+    else if ($(this).val() == "k-prm"){
+      panel1Variant = "k-prm";
+      panel2Variant = "k-prm-star";
+    }
+    clearAll();
+  });
 
   $("#draw-1").click(function(e) {
     if (drawingState == "none") {
@@ -406,7 +438,7 @@ $(function() {
     $("#instructions").html("Clear roadmap to draw");
     var newNodes = newRandomNodes(obstacles); 
 
-    roadmap1 = computeRoadmap(roadmap1, obstacles, newNodes, variant="k-prm");
+    roadmap1 = computeRoadmap(roadmap1, obstacles, newNodes, variant=panel1Variant);
     for (var i = 0; i < drawnRoadmap1.length; i++) drawnRoadmap1[i].remove();
     drawnRoadmap1 = drawRoadmap(roadmap1, r1);
     drawingState = "disabled"
@@ -417,7 +449,7 @@ $(function() {
         drawnPath1 = drawPath(goal, path1, start, r1);
     }
 
-    roadmap2 = computeRoadmap(roadmap2, obstacles, newNodes, variant="k-prm-star");
+    roadmap2 = computeRoadmap(roadmap2, obstacles, newNodes, variant=panel2Variant);
     for (var i = 0; i < drawnRoadmap2.length; i++) drawnRoadmap2[i].remove();
     drawnRoadmap2 = drawRoadmap(roadmap2, r2);
     drawingState = "disabled"
@@ -430,22 +462,7 @@ $(function() {
 
   });
   $("#clear").click(function() {
-    $("#instructions").html("Click to draw obstacles");
-    r1.clear();
-    r2.clear();
-    sums = [];
-    obstacles = [];
-    opaths = [];
-    robot = null;
-    dot = null;
-    drawnPath1 = null;
-    drawPath2 = null;
-    roadmap1 = null;
-    roadmap2 = null;
-    drawnRoadmap1 = [];
-    drawnRoadmap2 = [];
-    drawingState = "none";
-    drawStartAndGoal()
+    clearAll();
   });
   $("#clearroadmap").click(function() {
     $("#instructions").html("Click to draw obstacles");
