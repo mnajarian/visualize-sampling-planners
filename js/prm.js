@@ -162,7 +162,50 @@ function newRandomNodes(obstacles) {
   return nodes;
 }
 
-function computeRoadmap(roadmap, obstacles, newNodes, variant) {
+function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
+  var nodes = [startNode];
+  if (roadmap != null) nodes = roadmap["nodes"];
+  var triangles = triangulateAll(obstacles);
+  var adjacencyList = [];
+  adjacencyList.push([0]);
+  if (roadmap != null) adjacencyList = roadmap["adjacencyList"];
+  for (var i=0; i < newNodes.length; i++){
+    // find nearest node currently in graph
+    // if link exists, add node to nodes and add link to adjacacency list
+    var closestNodeDistance = Infinity;
+    var closestNode = null;
+    for (var j=0; j < nodes.length; j++){
+      if (distance(nodes[j], newNodes[i]) < closestNodeDistance) {
+        closestNode = nodes[j];
+        closestNodeDistance = distance(nodes[j], newNodes[i]);
+      }
+    }
+    if (linkExists(closestNode, newNodes[i], triangles) &&
+        closestNode != newNodes[i]){
+        nodes.push(newNodes[i]);
+        var l = null;
+        var closestNodeIndex = null;
+        var newNodeIndex = null;
+        for (var t=0; t < nodes.length; t++){
+          if (nodes[t] == newNodes[i]) newNodeIndex = t;
+          if (nodes[t] == closestNode) closestNodeIndex = t;
+        }
+        console.log(closestNode);
+        console.log(nodes);
+        console.log(closestNodeIndex);
+        for (var k=0; k < adjacencyList.length; k++){
+          if (adjacencyList[k].contains(closestNodeIndex)) l = k
+        }
+        adjacencyList[l].push(newNodeIndex);
+    }
+  }
+  return {
+    "nodes": nodes,
+    "adjacencyList": adjacencyList
+  }
+}
+
+function computeRoadmapPRM(roadmap, obstacles, newNodes, variant) {
   // extends an existing roadmap with given obstacles, 
   // based on the variant of sampling-based motion planner
 
@@ -211,6 +254,7 @@ function computeRoadmap(roadmap, obstacles, newNodes, variant) {
 }
 
 function drawRoadmap(roadmap, r) {
+  console.log(roadmap);
   var drawn = [];
   var nodes = roadmap["nodes"];
   for (var i = 0; i < nodes.length; i++) {
@@ -438,9 +482,16 @@ $(function() {
 
   $("#calc").click(function() {
     $("#instructions").html("Clear roadmap to draw");
-    var newNodes = newRandomNodes(obstacles); 
+    var newNodes = newRandomNodes(obstacles);
+    if ($("#sampler-selection").val() == "k-prm"){
+      //var newNodes = newRandomNodes(obstacles); 
+      roadmap1 = computeRoadmapPRM(roadmap1, obstacles, newNodes, panel1Variant);
+      roadmap2 = computeRoadmapPRM(roadmap2, obstacles, newNodes, panel2Variant);
+    } else if ($("#sampler-selection").val() == "rrt"){
+      roadmap1 = computeRoadmapRRT(roadmap1, obstacles, newNodes, panel1Variant, start);
+      roadmap2 = computeRoadmapRRT(roadmap2, obstacles, newNodes, panel2Variant, start);
+    }
 
-    roadmap1 = computeRoadmap(roadmap1, obstacles, newNodes, variant=panel1Variant);
     for (var i = 0; i < drawnRoadmap1.length; i++) drawnRoadmap1[i].remove();
     drawnRoadmap1 = drawRoadmap(roadmap1, r1);
     drawingState = "disabled"
@@ -451,7 +502,6 @@ $(function() {
         drawnPath1 = drawPath(goal, path1, start, r1);
     }
 
-    roadmap2 = computeRoadmap(roadmap2, obstacles, newNodes, variant=panel2Variant);
     for (var i = 0; i < drawnRoadmap2.length; i++) drawnRoadmap2[i].remove();
     drawnRoadmap2 = drawRoadmap(roadmap2, r2);
     drawingState = "disabled"
