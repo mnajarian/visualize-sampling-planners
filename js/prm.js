@@ -162,7 +162,7 @@ function newRandomNodes(obstacles) {
   return nodes;
 }
 
-function computeRoadmap(roadmap, obstacles, newNodes, variant="k-prm") {
+function computeRoadmap(roadmap, obstacles, newNodes, variant) {
   // extends an existing roadmap with given obstacles, 
   // based on the variant of sampling-based motion planner
 
@@ -175,10 +175,8 @@ function computeRoadmap(roadmap, obstacles, newNodes, variant="k-prm") {
   } else if (variant == "k-prm-star"){
     if (nodes.length > 0){
       numNeighbors = 2 * Math.E * (Math.log(nodes.length));
-      console.log(numNeighbors);
     } else {
       numNeighbors = parseInt($("#neighbors").val());
-      console.log(numNeighbors);
     }
   }
   var triangles = triangulateAll(obstacles);
@@ -400,10 +398,12 @@ $(function() {
     if ($(this).val() == "rrt"){
       panel1Variant = "rrt";
       panel2Variant = "rrt-star";
+      $("#neighbors-input").hide();
     }
     else if ($(this).val() == "k-prm"){
       panel1Variant = "k-prm";
       panel2Variant = "k-prm-star";
+      $("#neighbors-input").show();
     }
     clearAll();
   });
@@ -421,6 +421,7 @@ $(function() {
       }
     }
   });
+
   $("#draw-2").click(function(e) {
     if (drawingState == "none") {
       update = beginDraw("#f00", r2, e.offsetX, e.offsetY);
@@ -434,6 +435,7 @@ $(function() {
       }
     }
   });
+
   $("#calc").click(function() {
     $("#instructions").html("Clear roadmap to draw");
     var newNodes = newRandomNodes(obstacles); 
@@ -459,11 +461,12 @@ $(function() {
     if (path2 != null){
       drawnPath2 = drawPath(goal, path2, start, r2);
     }
-
   });
+
   $("#clear").click(function() {
     clearAll();
   });
+
   $("#clearroadmap").click(function() {
     $("#instructions").html("Click to draw obstacles");
     if (drawnPath1 != null) drawnPath1.remove();
