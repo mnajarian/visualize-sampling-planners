@@ -163,37 +163,45 @@ function newRandomNodes(obstacles) {
 }
 
 function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
+  var addNewNodes = newNodes.slice();
   var nodes = [startNode];
   if (roadmap != null) nodes = roadmap["nodes"];
   var triangles = triangulateAll(obstacles);
   var adjacencyList = [];
   adjacencyList.push([0]);
   if (roadmap != null) adjacencyList = roadmap["adjacencyList"];
-  for (var i=0; i < newNodes.length; i++){
+  while (addNewNodes.length > 0){
     // find nearest node currently in graph
     // if link exists, add node to nodes and add link to adjacacency list
+    // find node in newNodes with smallest distnace to any existing node in nodes
+    var newNode = null;
     var closestNodeDistance = Infinity;
     var closestNode = null;
-    for (var j=0; j < nodes.length; j++){
-      if (distance(nodes[j], newNodes[i]) < closestNodeDistance) {
-        closestNode = nodes[j];
-        closestNodeDistance = distance(nodes[j], newNodes[i]);
+    for (var k=0; k < addNewNodes.length; k++){
+      for (var j=0; j < nodes.length; j++){
+        if (distance(nodes[j], addNewNodes[k]) < closestNodeDistance) {
+          newNode = addNewNodes[k]; 
+          closestNode = nodes[j];
+          closestNodeDistance = distance(nodes[j], addNewNodes[k]);
+        }
       }
     }
-    if (linkExists(closestNode, newNodes[i], triangles) &&
-        closestNode != newNodes[i]){
-        nodes.push(newNodes[i]);
+    if (linkExists(closestNode, newNode, triangles) &&
+        closestNode != newNode){
+        nodes.push(newNode);
         var l = null;
         var closestNodeIndex = null;
         var newNodeIndex = null;
         for (var t=0; t < nodes.length; t++){
-          if (nodes[t] == newNodes[i]) newNodeIndex = t;
+          if (nodes[t] == newNode) newNodeIndex = t;
           if (nodes[t] == closestNode){
             closestNodeIndex = t;
           }
         }
         adjacencyList.push([closestNodeIndex, newNodeIndex]);
     }
+    var i = addNewNodes.indexOf(newNode);
+    if (i != -1) addNewNodes.splice(i, 1)
   }
   return {
     "nodes": nodes,
@@ -292,7 +300,7 @@ function triangulateAll(obstacles) {
   return triangles
 }
 
-function linkExists(p, q, triangles) {
+function linkExists(p, q, triangles, adjList=[]) {
   for (var i = 0; i < triangles.length; i++) {
     var t = triangles[i];
     if (!link(p, q, t[0], t[1], t[2])) return false
@@ -340,23 +348,31 @@ function calcShortestPath(start, goal, roadmap) {
     var min = 1E11;
     for (var j = 0; j < q.length; j++) {
       var cand = q[j];
+      console.log(cand);
       if (shortest[cand] < min) {
+        console.log("Here");
+        console.log(shortest[cand]);
         min = shortest[cand];
         ui = j;
         u = cand
       }
     }
+    console.log(u);
     if (shortest[u] == 1E11 || u == -1) break;
     q.remove(ui);
+    console.log(adj[u]);
     for (var i = 0; i < adj[u].length; i++) {
+      console.log(adj[i]);
       var adjacentNode = adj[u][i];
       var alt = shortest[u] + distance(nodes[u], nodes[adjacentNode]);
+      console.log(alt);
       if (alt < shortest[adjacentNode]) {
         shortest[adjacentNode] = alt;
         previous[adjacentNode] = u
       }
     }
   }
+  console.log(previous);
   var path = [];
   var curr = gnode;
   while (true) {
