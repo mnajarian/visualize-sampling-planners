@@ -314,6 +314,30 @@ function copyObstacles(arr) {
   return a
 }
 
+function calcShortestPathRRT(start, goal, roadmap){
+  var adj = roadmap["adjacencyList"];
+  var nodes = roadmap["nodes"];
+  var snode = null;
+  var smin = 1E8;
+  var gnode = null;
+  var gmin = 1E8;
+  for (var i = 0; i < nodes.length; i++){
+    var sdist = distance(start, nodes[i]);
+    if (sdist < smin){
+      smin = sdist;
+      snode = i;
+    }
+    var gdist = distance(goal, nodes[i]);
+    if (gdist < gmin){
+      gmin = gdist;
+      gnode = i;
+    }
+  }
+
+
+
+}
+
 function calcShortestPath(start, goal, roadmap) {
   var adj = roadmap["adjacencyList"];
   var nodes = roadmap["nodes"];
@@ -348,31 +372,23 @@ function calcShortestPath(start, goal, roadmap) {
     var min = 1E11;
     for (var j = 0; j < q.length; j++) {
       var cand = q[j];
-      console.log(cand);
       if (shortest[cand] < min) {
-        console.log("Here");
-        console.log(shortest[cand]);
         min = shortest[cand];
         ui = j;
         u = cand
       }
     }
-    console.log(u);
     if (shortest[u] == 1E11 || u == -1) break;
     q.remove(ui);
-    console.log(adj[u]);
     for (var i = 0; i < adj[u].length; i++) {
-      console.log(adj[i]);
       var adjacentNode = adj[u][i];
       var alt = shortest[u] + distance(nodes[u], nodes[adjacentNode]);
-      console.log(alt);
       if (alt < shortest[adjacentNode]) {
         shortest[adjacentNode] = alt;
         previous[adjacentNode] = u
       }
     }
   }
-  console.log(previous);
   var path = [];
   var curr = gnode;
   while (true) {
