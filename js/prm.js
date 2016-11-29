@@ -168,11 +168,13 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
   if (roadmap != null) nodes = roadmap["nodes"];
   var triangles = triangulateAll(obstacles);
   var adjacencyList = [];
-  // adjacencyList.push([0]);
   if (roadmap != null) adjacencyList = roadmap["adjacencyList"];
+  var costs = [];
+  if (roadmap != null) costs = roadmap["costs"];
   for (var i = nodes.length - newNodes.length; i < nodes.length; i++) {
     var l = [];
-    adjacencyList.push(l)
+    adjacencyList.push(l);
+    costs.push(0);
   }
   while (addNewNodes.length > 0){
     // find nearest node currently in graph
@@ -202,16 +204,36 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
             closestNodeIndex = t;
           }
         }
-        //adjacencyList.push([closestNodeIndex, newNodeIndex]);
         adjacencyList[closestNodeIndex].push(newNodeIndex);
         adjacencyList[newNodeIndex] = [closestNodeIndex];
+        costs[newNodeIndex] = costs[closestNodeIndex] + distance(closestNode, newNode);
+        if (variant == "rrt-star"){
+          if ((costs[newNodeIndex] + distance(newNode, closestNode)) < costs[closestNodeIndex]){
+            console.log("HERE");
+            parentIndex = getParentIndex(closestNode, adjacencyList);
+            p = nodes[parentIndex];
+            // remove (p, closestNode) from edge set and add (closestNode, newNode) to edge set
+            adjacencyList[p].pop();
+            adjencyList[newNodeIndex] = [closestNodeIndex];
+          }
+        }
     }
     var i = addNewNodes.indexOf(newNode);
     if (i != -1) addNewNodes.splice(i, 1)
   }
   return {
     "nodes": nodes,
-    "adjacencyList": adjacencyList
+    "adjacencyList": adjacencyList,
+    "costs": costs
+  }
+}
+
+function getParentIndex(closestNode, adjacencyList) {
+  for (var i=0; i < adjacencyList.length; i++) {
+    var list = adjacencyList[i];
+    for (var j=0; j < list.length; j++){
+      if (list[j] == closestNode) return i
+    }
   }
 }
 
@@ -219,7 +241,6 @@ function computeRoadmapPRM(roadmap, obstacles, newNodes, variant) {
   // extends an existing roadmap with given obstacles, 
   // based on the variant of sampling-based motion planner
 
-  // var numNodes = parseInt($("#samples").val());
   var nodes = [];
   if (roadmap != null) nodes = roadmap["nodes"];
   var numNeighbors = null;
@@ -233,7 +254,6 @@ function computeRoadmapPRM(roadmap, obstacles, newNodes, variant) {
     }
   }
   var triangles = triangulateAll(obstacles);
-  // for (var i = 0; i < numNodes; i++) nodes.push(getNewRandomNode(triangles));
   for (var i=0; i < newNodes.length; i++) nodes.push(newNodes[i]);
   var adjacencyList = [];
   if (roadmap != null) adjacencyList = roadmap["adjacencyList"];
@@ -318,30 +338,6 @@ function copyObstacles(arr) {
   var a = [];
   for (var i = 0; i < arr.length; i++) a.push([arr[i][0], arr[i][1]]);
   return a
-}
-
-function calcShortestPathRRT(start, goal, roadmap){
-  var adj = roadmap["adjacencyList"];
-  var nodes = roadmap["nodes"];
-  var snode = null;
-  var smin = 1E8;
-  var gnode = null;
-  var gmin = 1E8;
-  for (var i = 0; i < nodes.length; i++){
-    var sdist = distance(start, nodes[i]);
-    if (sdist < smin){
-      smin = sdist;
-      snode = i;
-    }
-    var gdist = distance(goal, nodes[i]);
-    if (gdist < gmin){
-      gmin = gdist;
-      gnode = i;
-    }
-  }
-
-
-
 }
 
 function calcShortestPath(start, goal, roadmap) {
