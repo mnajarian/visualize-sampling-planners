@@ -168,8 +168,12 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
   if (roadmap != null) nodes = roadmap["nodes"];
   var triangles = triangulateAll(obstacles);
   var adjacencyList = [];
-  adjacencyList.push([0]);
+  // adjacencyList.push([0]);
   if (roadmap != null) adjacencyList = roadmap["adjacencyList"];
+  for (var i = nodes.length - newNodes.length; i < nodes.length; i++) {
+    var l = [];
+    adjacencyList.push(l)
+  }
   while (addNewNodes.length > 0){
     // find nearest node currently in graph
     // if link exists, add node to nodes and add link to adjacacency list
@@ -198,7 +202,9 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
             closestNodeIndex = t;
           }
         }
-        adjacencyList.push([closestNodeIndex, newNodeIndex]);
+        //adjacencyList.push([closestNodeIndex, newNodeIndex]);
+        adjacencyList[closestNodeIndex].push(newNodeIndex);
+        adjacencyList[newNodeIndex] = [closestNodeIndex];
     }
     var i = addNewNodes.indexOf(newNode);
     if (i != -1) addNewNodes.splice(i, 1)
