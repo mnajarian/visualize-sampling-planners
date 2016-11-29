@@ -169,7 +169,7 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
   var triangles = triangulateAll(obstacles);
   var adjacencyList = [];
   if (roadmap != null) adjacencyList = roadmap["adjacencyList"];
-  var costs = [];
+  var costs = [0];
   if (roadmap != null) costs = roadmap["costs"];
   for (var i = nodes.length - newNodes.length; i < nodes.length; i++) {
     var l = [];
@@ -183,6 +183,7 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
     var newNode = null;
     var closestNodeDistance = Infinity;
     var closestNode = null;
+    // get new node to add based on closest distance to exising nodes
     for (var k=0; k < addNewNodes.length; k++){
       for (var j=0; j < nodes.length; j++){
         if (distance(nodes[j], addNewNodes[k]) < closestNodeDistance) {
@@ -192,6 +193,14 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
         }
       }
     }
+    
+    // get closest existing nodes surrounding newNode
+    var closestNodeIndices = [];
+    for (var t=0; t < nodes.length; t++){
+      if (distance(nodes[t], newNode) <300.0) closestNodeIndices.push(t)
+    }
+
+
     if (linkExists(closestNode, newNode, triangles) &&
         closestNode != newNode){
         nodes.push(newNode);
@@ -204,18 +213,46 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
             closestNodeIndex = t;
           }
         }
-        adjacencyList[closestNodeIndex].push(newNodeIndex);
-        adjacencyList[newNodeIndex] = [closestNodeIndex];
-        costs[newNodeIndex] = costs[closestNodeIndex] + distance(closestNode, newNode);
         if (variant == "rrt-star"){
-          if ((costs[newNodeIndex] + distance(newNode, closestNode)) < costs[closestNodeIndex]){
-            console.log("HERE");
-            parentIndex = getParentIndex(closestNode, adjacencyList);
-            p = nodes[parentIndex];
-            // remove (p, closestNode) from edge set and add (closestNode, newNode) to edge set
-            adjacencyList[p].pop();
-            adjencyList[newNodeIndex] = [closestNodeIndex];
+          if ((linkExists(startNode, newNode, triangles)) && (startNode != newNode)){
+            adjacencyList[0].push(newNodeIndex);
+            adjacencyList[newNodeIndex] = [0];
+            costs[newNodeIndex] = distance(startNode, newNode);
+          }else{
+            var cMin = Infinity;
+            var cMinNodeIndex = null;
+            for (var n=0; n < closestNodeIndices.length; n++){
+              var cNodeIndex = closestNodeIndices[n];
+              if ((costs[cNodeIndex] + distance(nodes[cNodeIndex],newNode) < cMin) && 
+                 (linkExists(nodes[cNodeIndex],newNode,triangles))){
+                cMin = costs[cNodeIndex];
+                cMinNodeIndex = cNodeIndex;
+              }
+            }
+            adjacencyList[cMinNodeIndex].push(newNodeIndex);
+            adjacencyList[newNodeIndex] = [cMinNodeIndex];
+            costs[newNodeIndex] = costs[cMinNodeIndex] + distance(nodes[cMinNodeIndex], newNode);
+
+            // TODO: re-wire the tree here
+            for (var m=0; m < closestNodeIndices.length; m++){
+              if (linkExists(nodes[closestNodeIndices[m]], newNode, triangles) && 
+                 (costs[newNodeIndex] + distance(nodes[closestNodeIndices[m]],newNode) < costs[closestNodeIndices[m]])){
+                console.log("HERE");
+                console.log(closestNodeIndices[m]);
+                var parentIndex = getParentIndex(closestNodeIndices[m], adjacencyList, startNode);
+                console.log(parentIndex);
+                var cMNodeIndex = adjacencyList[parentIndex].indexOf(closestNodeIndices[m]);
+                adjacencyList[parentIndex].splice(cMNodeIndex,1);
+                var cMParentNodeIndex = adjacencyList[cMNodeIndex].indexOf(parentIndex);
+                adjacencyList[cMNodeIndex].splice(cMParentNodeIndex,1)
+              }
+            }
           }
+
+        }
+        else {
+          adjacencyList[closestNodeIndex].push(newNodeIndex);
+          adjacencyList[newNodeIndex] = [closestNodeIndex];
         }
     }
     var i = addNewNodes.indexOf(newNode);
@@ -228,11 +265,15 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
   }
 }
 
-function getParentIndex(closestNode, adjacencyList) {
-  for (var i=0; i < adjacencyList.length; i++) {
-    var list = adjacencyList[i];
-    for (var j=0; j < list.length; j++){
-      if (list[j] == closestNode) return i
+
+function getParentIndex(closestNodeIndex, adjacencyList, startNode) {
+  if (closestNodeIndex == 0) return 0
+  else {
+    for (var i=0; i < adjacencyList.length; i++) {
+      var list = adjacencyList[i];
+      for (var j=0; j < list.length; j++){
+        if (list[j] == closestNodeIndex) return i
+      }
     }
   }
 }
