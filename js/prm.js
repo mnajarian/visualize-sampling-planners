@@ -203,16 +203,12 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
         }
       }
     }
-    console.log(closestNode);
-    console.log(newFreeNode);
     var newNode = steer(closestNode, newFreeNode, .75);   
-    //var newNode = newFreeNode; 
-    console.log(newNode);    
 
     // get closest existing nodes surrounding newNode
     var closestNodeIndices = [];
     for (var t=0; t < nodes.length; t++){
-      if (distance(nodes[t], newNode) <300.0) closestNodeIndices.push(t)
+      if (distance(nodes[t], newNode) < 700.0) closestNodeIndices.push(t)
     }
 
     // TODO: add another constraint in this if statement 
@@ -253,21 +249,22 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
             // TODO: re-wire the tree here
             for (var m=0; m < closestNodeIndices.length; m++){
               if (linkExists(nodes[closestNodeIndices[m]], newNode, triangles) && 
-                 (costs[newNodeIndex] + distance(nodes[closestNodeIndices[m]],newNode) < costs[closestNodeIndices[m]])){
+                 (costs[newNodeIndex] + distance(nodes[closestNodeIndices[m]],newNode) < costs[closestNodeIndices[m]]) &&
+                 (nodes[closestNodeIndices[m]] != nodes[cMinNodeIndex])){
                 console.log("HERE");
                 console.log(closestNodeIndices[m]);
-                // TODO: uncomment the lines below after presentation
-                //var parentIndex = getParentIndex(closestNodeIndices[m], adjacencyList, startNode);
-                //console.log(parentIndex);
-                //var cMNodeIndex = adjacencyList[parentIndex].indexOf(closestNodeIndices[m]);
-                //adjacencyList[parentIndex].splice(cMNodeIndex,1);
-                //var cMParentNodeIndex = adjacencyList[cMNodeIndex].indexOf(parentIndex);
-                //adjacencyList[cMNodeIndex].splice(cMParentNodeIndex,1)
-                // TODO: add edge (closestNodeIndices[m], newNodeIndex)
+                var parentIndex = getParentIndex(closestNodeIndices[m], adjacencyList, startNode);
+                console.log(parentIndex);
+                var cMNodeIndex = adjacencyList[parentIndex].indexOf(closestNodeIndices[m]);
+                adjacencyList[parentIndex].splice(cMNodeIndex,1);
+                var cMParentNodeIndex = adjacencyList[closestNodeIndices[m]].indexOf(parentIndex);
+                adjacencyList[closestNodeIndices[m]].splice(cMParentNodeIndex,1);
+                adjacencyList[closestNodeIndices[m]].push(newNodeIndex);
+                // update costs of newNodeIndex
+                costs[closestNodeIndices[m]] = costs[newNodeIndex] + distance(nodes[newNodeIndex], nodes[closestNodeIndices[m]]);
               }
             }
           }
-
         }
         else {
           adjacencyList[closestNodeIndex].push(newNodeIndex);
@@ -291,7 +288,7 @@ function getParentIndex(closestNodeIndex, adjacencyList, startNode) {
     for (var i=0; i < adjacencyList.length; i++) {
       var list = adjacencyList[i];
       for (var j=0; j < list.length; j++){
-        if (list[j] == closestNodeIndex) return i
+        if (list[j] == closestNodeIndex) return j
       }
     }
   }
