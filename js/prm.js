@@ -162,6 +162,17 @@ function newRandomNodes(obstacles) {
   return nodes;
 }
 
+function steer(node1, node2, sizeScale) {
+  //return a node a size distance from node1 in the direction of node2
+  var steerNode = [];
+  var x_diff = node2[0] - node1[0];
+  var y_diff = node2[1] - node1[1];
+  var angle = Math.atan(y_diff/x_diff);
+  steerNode[0] = node1[0] + (x_diff*sizeScale)*Math.cos(angle);
+  steerNode[1] = node1[1] + (y_diff*sizeScale)*Math.sin(angle);
+  return steerNode
+}
+
 function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
   var addNewNodes = newNodes.slice();
   var nodes = [startNode];
@@ -180,26 +191,26 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
     // find nearest node currently in graph
     // if link exists, add node to nodes and add link to adjacacency list
     // find node in newNodes with smallest distnace to any existing node in nodes
-    var newNode = null;
+    var newFreeNode = null;
     var closestNodeDistance = Infinity;
     var closestNode = null;
     // get new node to add based on closest distance to exising nodes
     for (var k=0; k < addNewNodes.length; k++){
       for (var j=0; j < nodes.length; j++){
         if (distance(nodes[j], addNewNodes[k]) < closestNodeDistance) {
-          newNode = addNewNodes[k]; 
+          newFreeNode = addNewNodes[k]; 
           closestNode = nodes[j];
           closestNodeDistance = distance(nodes[j], addNewNodes[k]);
         }
       }
     }
+    var newNode = steer(closestNode, newFreeNode, .75);    
     
     // get closest existing nodes surrounding newNode
     var closestNodeIndices = [];
     for (var t=0; t < nodes.length; t++){
       if (distance(nodes[t], newNode) <300.0) closestNodeIndices.push(t)
     }
-
 
     if (linkExists(closestNode, newNode, triangles) &&
         closestNode != newNode){
@@ -239,12 +250,14 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
                  (costs[newNodeIndex] + distance(nodes[closestNodeIndices[m]],newNode) < costs[closestNodeIndices[m]])){
                 console.log("HERE");
                 console.log(closestNodeIndices[m]);
-                var parentIndex = getParentIndex(closestNodeIndices[m], adjacencyList, startNode);
-                console.log(parentIndex);
-                var cMNodeIndex = adjacencyList[parentIndex].indexOf(closestNodeIndices[m]);
-                adjacencyList[parentIndex].splice(cMNodeIndex,1);
-                var cMParentNodeIndex = adjacencyList[cMNodeIndex].indexOf(parentIndex);
-                adjacencyList[cMNodeIndex].splice(cMParentNodeIndex,1)
+                // TODO: uncomment the lines below after presentation
+                //var parentIndex = getParentIndex(closestNodeIndices[m], adjacencyList, startNode);
+                //console.log(parentIndex);
+                //var cMNodeIndex = adjacencyList[parentIndex].indexOf(closestNodeIndices[m]);
+                //adjacencyList[parentIndex].splice(cMNodeIndex,1);
+                //var cMParentNodeIndex = adjacencyList[cMNodeIndex].indexOf(parentIndex);
+                //adjacencyList[cMNodeIndex].splice(cMParentNodeIndex,1)
+                // TODO: add edge (closestNodeIndices[m], newNodeIndex)
               }
             }
           }
@@ -255,7 +268,7 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
           adjacencyList[newNodeIndex] = [closestNodeIndex];
         }
     }
-    var i = addNewNodes.indexOf(newNode);
+    var i = addNewNodes.indexOf(newFreeNode);
     if (i != -1) addNewNodes.splice(i, 1)
   }
   return {
