@@ -162,14 +162,13 @@ function newRandomNodes(obstacles) {
   return nodes;
 }
 
-function steer(node1, node2, sizeScale) {
-  //return a node a size distance from node1 in the direction of node2
+function steer(node1, node2) {
+  // return a node at the midpoint between node1 and node2
   var steerNode = [];
-  var x_diff = node2[0] - node1[0];
-  var y_diff = node2[1] - node1[1];
-  var angle = Math.atan(y_diff/x_diff);
-  steerNode[0] = node1[0] + (x_diff*sizeScale)*Math.cos(angle);
-  steerNode[1] = node1[1] + (y_diff*sizeScale)*Math.sin(angle);
+  var steerX = (node1[0] + node2[0])/2.0;
+  var steerY = (node1[1] + node2[1])/2.0; 
+  steerNode[0] = steerX;
+  steerNode[1] = steerY;
   return steerNode
 }
 
@@ -204,15 +203,22 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
         }
       }
     }
-    var newNode = steer(closestNode, newFreeNode, .75);    
-    
+    console.log(closestNode);
+    console.log(newFreeNode);
+    var newNode = steer(closestNode, newFreeNode, .75);   
+    //var newNode = newFreeNode; 
+    console.log(newNode);    
+
     // get closest existing nodes surrounding newNode
     var closestNodeIndices = [];
     for (var t=0; t < nodes.length; t++){
       if (distance(nodes[t], newNode) <300.0) closestNodeIndices.push(t)
     }
 
+    // TODO: add another constraint in this if statement 
+    // to test if new link would overlap existing links (in adjacency list)
     if (linkExists(closestNode, newNode, triangles) &&
+        // !linkOverlaps(closestNode, newNode, adjacencyList, nodes) && 
         closestNode != newNode){
         nodes.push(newNode);
         var l = null;
@@ -360,7 +366,7 @@ function getNewRandomNode(triangles) {
   while (true || count >= maxAttempts) {
     count += 1;
     var x = 2 + Math.random() * 344;
-    var y = 2 + Math.random() * 499;
+    var y = 2 + Math.random() * 498;
     var clear = true;
     for (var i = 0; i < triangles.length; i++) {
       var o = triangles[i];
@@ -567,6 +573,7 @@ $(function() {
   $("#calc").click(function() {
     $("#instructions").html("Clear roadmap to draw");
     var newNodes = newRandomNodes(obstacles);
+    console.log(newNodes);
     if ($("#sampler-selection").val() == "k-prm"){
       //var newNodes = newRandomNodes(obstacles); 
       roadmap1 = computeRoadmapPRM(roadmap1, obstacles, newNodes, panel1Variant);
