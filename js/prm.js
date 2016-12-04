@@ -1,3 +1,4 @@
+// ----------- The code between these lines is largely attributed to Stephanie Zolayvar, with minor modifications by Maya Najarian -----------
 Array.prototype.remove = function(from, to) {
   var rest = this.slice((to || from) + 1 || this.length);
   this.length = from < 0 ? this.length + from : from;
@@ -154,6 +155,98 @@ function beginDraw(color, r, x, y) {
   return addPoint
 }
 
+function calcShortestPath(start, goal, roadmap) {
+  var adj = roadmap["adjacencyList"];
+  var nodes = roadmap["nodes"];
+  var snode = null;
+  var smin = 1E8;
+  var gnode = null;
+  var gmin = 1E8;
+  for (var i = 0; i < nodes.length; i++) {
+    var sdist = distance(start, nodes[i]);
+    if (sdist < smin) {
+      smin = sdist;
+      snode = i
+    }
+    var gdist = distance(goal, nodes[i]);
+    if (gdist < gmin) {
+      gmin = gdist;
+      gnode = i
+    }
+  }
+  var shortest = [];
+  var previous = [];
+  var q = [];
+  for (var i = 0; i < nodes.length; i++) {
+    shortest.push(1E11);
+    previous.push(-1);
+    q.push(i)
+  }
+  shortest[snode] = 0;
+  while (q.length > 0) {
+    var u = -1;
+    var ui = -1;
+    var min = 1E11;
+    for (var j = 0; j < q.length; j++) {
+      var cand = q[j];
+      if (shortest[cand] < min) {
+        min = shortest[cand];
+        ui = j;
+        u = cand
+      }
+    }
+    if (shortest[u] == 1E11 || u == -1) break;
+    q.remove(ui);
+    for (var i = 0; i < adj[u].length; i++) {
+      var adjacentNode = adj[u][i];
+      var alt = shortest[u] + distance(nodes[u], nodes[adjacentNode]);
+      if (alt < shortest[adjacentNode]) {
+        shortest[adjacentNode] = alt;
+        previous[adjacentNode] = u
+      }
+    }
+  }
+  var path = [];
+  var curr = gnode;
+  while (true) {
+    path.push(nodes[curr]);
+    curr = previous[curr];
+    if (curr == snode || curr == null) break
+  }
+  path.push(nodes[snode]);
+  if (path[1] == null){
+    return null;
+  } else {
+    return path;
+  } 
+}
+
+function triangulateAll(obstacles) {
+  var triangles = [];
+  for (var i = 0; i < obstacles.length; i++) {
+    var ob = obstacles[i];
+    var tris = triangulate(copyObstacles(ob));
+    for (var j = 0; j < tris.length; j++) triangles.push(tris[j])
+  }
+  return triangles
+}
+
+function linkExists(p, q, triangles) {
+  for (var i = 0; i < triangles.length; i++) {
+    var t = triangles[i];
+    if (!link(p, q, t[0], t[1], t[2])) return false
+  }
+  return true
+}
+
+function copyObstacles(arr) {
+  var a = [];
+  for (var i = 0; i < arr.length; i++) a.push([arr[i][0], arr[i][1]]);
+  return a
+}
+
+// -----------
+
 function newRandomNodes(obstacles) {
   var numNodes = parseInt($("#samples").val());
   var nodes = [];
@@ -180,7 +273,6 @@ function obstacleFree(node, triangles) {
   }
   return clear
 }
-
 
 function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
   var addNewNodes = newNodes.slice();
@@ -357,96 +449,6 @@ function getNewRandomNode(triangles) {
     var y = 2 + Math.random() * 498;
     if (obstacleFree([x,y], triangles)) return [x,y]
   }
-}
-
-function triangulateAll(obstacles) {
-  var triangles = [];
-  for (var i = 0; i < obstacles.length; i++) {
-    var ob = obstacles[i];
-    var tris = triangulate(copyObstacles(ob));
-    for (var j = 0; j < tris.length; j++) triangles.push(tris[j])
-  }
-  return triangles
-}
-
-function linkExists(p, q, triangles) {
-  for (var i = 0; i < triangles.length; i++) {
-    var t = triangles[i];
-    if (!link(p, q, t[0], t[1], t[2])) return false
-  }
-  return true
-}
-
-function copyObstacles(arr) {
-  var a = [];
-  for (var i = 0; i < arr.length; i++) a.push([arr[i][0], arr[i][1]]);
-  return a
-}
-
-function calcShortestPath(start, goal, roadmap) {
-  var adj = roadmap["adjacencyList"];
-  var nodes = roadmap["nodes"];
-  var snode = null;
-  var smin = 1E8;
-  var gnode = null;
-  var gmin = 1E8;
-  for (var i = 0; i < nodes.length; i++) {
-    var sdist = distance(start, nodes[i]);
-    if (sdist < smin) {
-      smin = sdist;
-      snode = i
-    }
-    var gdist = distance(goal, nodes[i]);
-    if (gdist < gmin) {
-      gmin = gdist;
-      gnode = i
-    }
-  }
-  var shortest = [];
-  var previous = [];
-  var q = [];
-  for (var i = 0; i < nodes.length; i++) {
-    shortest.push(1E11);
-    previous.push(-1);
-    q.push(i)
-  }
-  shortest[snode] = 0;
-  while (q.length > 0) {
-    var u = -1;
-    var ui = -1;
-    var min = 1E11;
-    for (var j = 0; j < q.length; j++) {
-      var cand = q[j];
-      if (shortest[cand] < min) {
-        min = shortest[cand];
-        ui = j;
-        u = cand
-      }
-    }
-    if (shortest[u] == 1E11 || u == -1) break;
-    q.remove(ui);
-    for (var i = 0; i < adj[u].length; i++) {
-      var adjacentNode = adj[u][i];
-      var alt = shortest[u] + distance(nodes[u], nodes[adjacentNode]);
-      if (alt < shortest[adjacentNode]) {
-        shortest[adjacentNode] = alt;
-        previous[adjacentNode] = u
-      }
-    }
-  }
-  var path = [];
-  var curr = gnode;
-  while (true) {
-    path.push(nodes[curr]);
-    curr = previous[curr];
-    if (curr == snode || curr == null) break
-  }
-  path.push(nodes[snode]);
-  if (path[1] == null){
-    return null;
-  } else {
-    return path;
-  } 
 }
 
 function drawPath(goal, path, start, r) {
