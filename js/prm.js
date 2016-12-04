@@ -185,24 +185,24 @@ function obstacleFree(node, triangles) {
 function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
   var addNewNodes = newNodes.slice();
   var nodes = [startNode];
-  if (roadmap != null) nodes = roadmap["nodes"];
   var triangles = triangulateAll(obstacles);
-  console.log(triangles);
   var adjacencyList = [];
   adjacencyList.push([]);
-  if (roadmap != null) adjacencyList = roadmap["adjacencyList"];
   var costs = [0];
-  if (roadmap != null) costs = roadmap["costs"];
+  var parents = [0];
+  if (roadmap != null){
+    nodes = roadmap["nodes"];
+    adjacencyList = roadmap["adjacencyList"];
+    costs = roadmap["costs"];
+    parents = roadmap["parents"];
+  }
   for (var i = nodes.length - newNodes.length; i < nodes.length; i++) {
     var l = [];
     adjacencyList.push(l);
-    //costs.push(0);
     costs.push(null);
+    parents.push(null);
   }
   while (addNewNodes.length > 0){
-    // find nearest node currently in graph
-    // if link exists, add node to nodes and add link to adjacacency list
-    // find node in newNodes with smallest distnace to any existing node in nodes
     var newFreeNode = null;
     var closestNodeDistance = Infinity;
     var closestNode = null;
@@ -251,16 +251,13 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
         adjacencyList[xMinIndex].push(newNodeIndex);
         adjacencyList[newNodeIndex].push(xMinIndex);
         costs[newNodeIndex] = costs[xMinIndex] + distance(newNode, nodes[xMinIndex]);
-        
+        parents[newNodeIndex] = xMinIndex;       
+ 
         for (var m=0; m < closestNodeIndices.length; m++) {
           var xNear = closestNodeIndices[m];
           if (linkExists(newNode, nodes[xNear], triangles) && 
              (costs[newNodeIndex] + distance(newNode, nodes[xNear]) < costs[xNear])){
-            console.log("HERE");
-            //var xParent = null;
-            //while (xParent == null) xParent = getParentIndex(xNear, adjacencyList);
-            var xParent = getParentIndex(xNear, adjacencyList);
-            //if (xParent == null) console.log(xNear); console.log(adjacencyList);
+            var xParent = parents[xNear];
             // Remove (xParent, xNear)
             adjacencyList[xParent].splice(adjacencyList[xParent].indexOf(xNear), 1);
             adjacencyList[xNear].splice(adjacencyList[xNear].indexOf(xParent), 1);
@@ -268,6 +265,7 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
             adjacencyList[xNear].push(newNodeIndex);
             adjacencyList[newNodeIndex].push(xNear);
             costs[xNear] = costs[newNodeIndex] + distance(newNode, nodes[xNear]);
+            parents[xNear] = newNodeIndex;
           }
         }
       }
@@ -278,20 +276,8 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
   return {
     "nodes": nodes,
     "adjacencyList": adjacencyList,
-    "costs": costs
-  }
-}
-
-
-function getParentIndex(nodeIndex, adjacencyList) {
-  if (nodeIndex == 0) return 0
-  else {
-    for (var i=0; i < adjacencyList.length; i++) {
-      var list = adjacencyList[i];
-      for (var j=0; j < list.length; j++){
-        if (list[j] == nodeIndex) return i
-      }
-    }
+    "costs": costs,
+    "parents": parents
   }
 }
 
@@ -570,7 +556,6 @@ $(function() {
       roadmap1 = computeRoadmapPRM(roadmap1, obstacles, newNodes, panel1Variant);
       roadmap2 = computeRoadmapPRM(roadmap2, obstacles, newNodes, panel2Variant);
     } else if ($("#sampler-selection").val() == "rrt"){
-      console.log(obstacles);
       roadmap1 = computeRoadmapRRT(roadmap1, obstacles, newNodes, panel1Variant, start);
       roadmap2 = computeRoadmapRRT(roadmap2, obstacles, newNodes, panel2Variant, start);
     }
