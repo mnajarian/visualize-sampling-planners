@@ -172,19 +172,32 @@ function steer(node1, node2) {
   return steerNode
 }
 
+function obstacleFree(node, triangles) {
+  var clear = true;
+  for (var i = 0; i < triangles.length; i++) {
+    var o = triangles[i];
+    if (triangleContainsPoint(o[0], o[1], o[2], node)) clear = false
+  }
+  return clear
+}
+
+
 function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
   var addNewNodes = newNodes.slice();
   var nodes = [startNode];
   if (roadmap != null) nodes = roadmap["nodes"];
   var triangles = triangulateAll(obstacles);
+  console.log(triangles);
   var adjacencyList = [];
+  adjacencyList.push([]);
   if (roadmap != null) adjacencyList = roadmap["adjacencyList"];
   var costs = [0];
   if (roadmap != null) costs = roadmap["costs"];
   for (var i = nodes.length - newNodes.length; i < nodes.length; i++) {
     var l = [];
     adjacencyList.push(l);
-    costs.push(0);
+    //costs.push(0);
+    costs.push(null);
   }
   while (addNewNodes.length > 0){
     // find nearest node currently in graph
@@ -203,77 +216,65 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
         }
       }
     }
-    var newNode = steer(closestNode, newFreeNode, .75);   
-
-    // get closest existing nodes surrounding newNode
-    var closestNodeIndices = [];
-    for (var t=0; t < nodes.length; t++){
-      if (distance(nodes[t], newNode) < 700.0) closestNodeIndices.push(t)
-    }
-
-    // TODO: add another constraint in this if statement 
-    // to test if new link would overlap existing links (in adjacency list)
-    if (linkExists(closestNode, newNode, triangles) &&
-        // !linkOverlaps(closestNode, newNode, adjacencyList, nodes) && 
-        closestNode != newNode){
-        nodes.push(newNode);
-        var l = null;
-        var closestNodeIndex = null;
-        var newNodeIndex = null;
-        for (var t=0; t < nodes.length; t++){
-          if (nodes[t] == newNode) newNodeIndex = t;
-          if (nodes[t] == closestNode){
-            closestNodeIndex = t;
-          }
-        }
-        if (variant == "rrt-star"){
-          if ((linkExists(startNode, newNode, triangles)) && (startNode != newNode)){
-            adjacencyList[0].push(newNodeIndex);
-            adjacencyList[newNodeIndex] = [0];
-            costs[newNodeIndex] = distance(startNode, newNode);
-          }else{
-            var cMin = Infinity;
-            var cMinNodeIndex = null;
-            for (var n=0; n < closestNodeIndices.length; n++){
-              var cNodeIndex = closestNodeIndices[n];
-              if ((costs[cNodeIndex] + distance(nodes[cNodeIndex],newNode) < cMin) && 
-                 (linkExists(nodes[cNodeIndex],newNode,triangles))){
-                cMin = costs[cNodeIndex];
-                cMinNodeIndex = cNodeIndex;
-              }
-            }
-            adjacencyList[cMinNodeIndex].push(newNodeIndex);
-            adjacencyList[newNodeIndex] = [cMinNodeIndex];
-            costs[newNodeIndex] = costs[cMinNodeIndex] + distance(nodes[cMinNodeIndex], newNode);
-
-            // TODO: re-wire the tree here
-            for (var m=0; m < closestNodeIndices.length; m++){
-              if (linkExists(nodes[closestNodeIndices[m]], newNode, triangles) && 
-                 (costs[newNodeIndex] + distance(nodes[closestNodeIndices[m]],newNode) < costs[closestNodeIndices[m]]) &&
-                 (nodes[closestNodeIndices[m]] != nodes[cMinNodeIndex])){
-                console.log("HERE");
-                console.log(closestNodeIndices[m]);
-                var parentIndex = getParentIndex(closestNodeIndices[m], adjacencyList, startNode);
-                console.log(parentIndex);
-                var cMNodeIndex = adjacencyList[parentIndex].indexOf(closestNodeIndices[m]);
-                adjacencyList[parentIndex].splice(cMNodeIndex,1);
-                var cMParentNodeIndex = adjacencyList[closestNodeIndices[m]].indexOf(parentIndex);
-                adjacencyList[closestNodeIndices[m]].splice(cMParentNodeIndex,1);
-                adjacencyList[closestNodeIndices[m]].push(newNodeIndex);
-                // update costs of newNodeIndex
-                costs[closestNodeIndices[m]] = costs[newNodeIndex] + distance(nodes[newNodeIndex], nodes[closestNodeIndices[m]]);
-              }
-            }
-          }
-        }
-        else {
+    var newNode = steer(closestNode, newFreeNode); 
+    if (obstacleFree(newNode, triangles)) {
+      if (variant == "rrt") {
+        if (linkExists(closestNode, newNode, triangles) && closestNode != newNode) {
+          nodes.push(newNode);
+          var closestNodeIndex = nodes.indexOf(closestNode);
+          var newNodeIndex = nodes.indexOf(newNode);
           adjacencyList[closestNodeIndex].push(newNodeIndex);
           adjacencyList[newNodeIndex] = [closestNodeIndex];
         }
+      }
+      else if (variant == "rrt-star") {
+        var xMin = closestNode;
+        var cMin = costs[nodes.indexOf(xMin)] + distance(xMin, newNode);
+
+        // get closest existing nodes surrounding newNode
+        var closestNodeIndices = [];
+        for (var t=0; t < nodes.length; t++){
+          if (distance(nodes[t], newNode) < 700.0) closestNodeIndices.push(t)
+        }
+        nodes.push(newNode);
+        for (var i=0; i < closestNodeIndices.length; i++) {
+          var xNearIndex = closestNodeIndices[i];
+          var xNear = nodes[xNearIndex];
+          if (linkExists(xNear, newNode, triangles) && 
+             (costs[xNearIndex] + distance(nodes[xNearIndex], newNode) < cMin)){
+            xMin = xNear;
+            cMin = costs[xNearIndex] + distance(nodes[xNearIndex], newNode); 
+          } 
+        }
+        var newNodeIndex = nodes.indexOf(newNode);
+        var xMinIndex = nodes.indexOf(xMin);
+        adjacencyList[xMinIndex].push(newNodeIndex);
+        adjacencyList[newNodeIndex].push(xMinIndex);
+        costs[newNodeIndex] = costs[xMinIndex] + distance(newNode, nodes[xMinIndex]);
+        
+        for (var m=0; m < closestNodeIndices.length; m++) {
+          var xNear = closestNodeIndices[m];
+          if (linkExists(newNode, nodes[xNear], triangles) && 
+             (costs[newNodeIndex] + distance(newNode, nodes[xNear]) < costs[xNear])){
+            console.log("HERE");
+            //var xParent = null;
+            //while (xParent == null) xParent = getParentIndex(xNear, adjacencyList);
+            var xParent = getParentIndex(xNear, adjacencyList);
+            //if (xParent == null) console.log(xNear); console.log(adjacencyList);
+            // Remove (xParent, xNear)
+            adjacencyList[xParent].splice(adjacencyList[xParent].indexOf(xNear), 1);
+            adjacencyList[xNear].splice(adjacencyList[xNear].indexOf(xParent), 1);
+            // Add (newNode, xNear)
+            adjacencyList[xNear].push(newNodeIndex);
+            adjacencyList[newNodeIndex].push(xNear);
+            costs[xNear] = costs[newNodeIndex] + distance(newNode, nodes[xNear]);
+          }
+        }
+      }
     }
     var i = addNewNodes.indexOf(newFreeNode);
     if (i != -1) addNewNodes.splice(i, 1)
-  }
+  }  
   return {
     "nodes": nodes,
     "adjacencyList": adjacencyList,
@@ -282,13 +283,13 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
 }
 
 
-function getParentIndex(closestNodeIndex, adjacencyList, startNode) {
-  if (closestNodeIndex == 0) return 0
+function getParentIndex(nodeIndex, adjacencyList) {
+  if (nodeIndex == 0) return 0
   else {
     for (var i=0; i < adjacencyList.length; i++) {
       var list = adjacencyList[i];
       for (var j=0; j < list.length; j++){
-        if (list[j] == closestNodeIndex) return j
+        if (list[j] == nodeIndex) return i
       }
     }
   }
@@ -364,12 +365,7 @@ function getNewRandomNode(triangles) {
     count += 1;
     var x = 2 + Math.random() * 344;
     var y = 2 + Math.random() * 498;
-    var clear = true;
-    for (var i = 0; i < triangles.length; i++) {
-      var o = triangles[i];
-      if (triangleContainsPoint(o[0], o[1], o[2], [x, y])) clear = false
-    }
-    if (clear) return [x, y]
+    if (obstacleFree([x,y], triangles)) return [x,y]
   }
 }
 
@@ -383,7 +379,7 @@ function triangulateAll(obstacles) {
   return triangles
 }
 
-function linkExists(p, q, triangles, adjList=[]) {
+function linkExists(p, q, triangles) {
   for (var i = 0; i < triangles.length; i++) {
     var t = triangles[i];
     if (!link(p, q, t[0], t[1], t[2])) return false
@@ -570,12 +566,11 @@ $(function() {
   $("#calc").click(function() {
     $("#instructions").html("Clear roadmap to draw");
     var newNodes = newRandomNodes(obstacles);
-    console.log(newNodes);
     if ($("#sampler-selection").val() == "k-prm"){
-      //var newNodes = newRandomNodes(obstacles); 
       roadmap1 = computeRoadmapPRM(roadmap1, obstacles, newNodes, panel1Variant);
       roadmap2 = computeRoadmapPRM(roadmap2, obstacles, newNodes, panel2Variant);
     } else if ($("#sampler-selection").val() == "rrt"){
+      console.log(obstacles);
       roadmap1 = computeRoadmapRRT(roadmap1, obstacles, newNodes, panel1Variant, start);
       roadmap2 = computeRoadmapRRT(roadmap2, obstacles, newNodes, panel2Variant, start);
     }
