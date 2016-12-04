@@ -58,8 +58,7 @@
         float: left; 
       }
       h3 {
-        font-size: 24px;
-        font-weight: 200px;
+        font-size: 22px;
         line-height: 1.5em;
         font-family: sans-serif;
       }
@@ -114,10 +113,10 @@
       <div id="selection">
         <h4>Select planner comparison</h4>
         <select id="sampler-selection">
-          <option value="k-prm">k-PRM vs. k-PRM*</option>
-          <option value="rrt">RRT vs. RRT*</option>
+          <option value="k-prm">k-PRM(left) vs. k-PRM*(right)</option>
+          <option value="rrt">RRT(left) vs. RRT*(right)</option>
         </select><br><br>
-        <span id="instructions" style="font-size: 0.75em"></span>
+        <h4 style="display:inline">Instructions: </h4><span id="instructions" style="font-size: 0.75em"></span>
       </div>
       <div id="inputs">
         <label label-for="#samples" class="label">Samples:  &nbsp </label><input type="number" id="samples" value="15"/><br>
@@ -130,6 +129,7 @@
         <button id="clearroadmap">Clear Roadmap</button>
         <button id="clear">Clear All</button>
       </div>
+      <span style="font-size:11px">*Note that some pieces of this code were drawn from Stephanie Zolayvar's Interactive Probablistic Roadmap Demo, which can be found <a href="http://robotics.cs.unc.edu/interactive/prm.html">here</a>.</span> 
     </div>
 
 <script type="text/javascript">
