@@ -224,7 +224,8 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
           var closestNodeIndex = nodes.indexOf(closestNode);
           var newNodeIndex = nodes.indexOf(newNode);
           adjacencyList[closestNodeIndex].push(newNodeIndex);
-          adjacencyList[newNodeIndex] = [closestNodeIndex];
+          //adjacencyList[newNodeIndex] = [closestNodeIndex];
+          adjacencyList[newNodeIndex].push(closestNodeIndex);
         }
       }
       else if (variant == "rrt-star") {
@@ -240,8 +241,11 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
         for (var i=0; i < closestNodeIndices.length; i++) {
           var xNearIndex = closestNodeIndices[i];
           var xNear = nodes[xNearIndex];
-          if (linkExists(xNear, newNode, triangles) && 
+          if ((linkExists(xNear, newNode, triangles)) &&
+             (linkExists(newNode, xNear, triangles)) &&  
              (costs[xNearIndex] + distance(nodes[xNearIndex], newNode) < cMin)){
+            console.log(triangles);
+            console.log(linkExists(xNear, newNode, triangles));
             xMin = xNear;
             cMin = costs[xNearIndex] + distance(nodes[xNearIndex], newNode); 
           } 
