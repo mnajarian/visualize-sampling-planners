@@ -336,8 +336,6 @@ function computeRoadmapRRT(roadmap, obstacles, newNodes, variant, startNode) {
           if ((linkExists(xNear, newNode, triangles)) &&
              (linkExists(newNode, xNear, triangles)) &&  
              (costs[xNearIndex] + distance(nodes[xNearIndex], newNode) < cMin)){
-            console.log(triangles);
-            console.log(linkExists(xNear, newNode, triangles));
             xMin = xNear;
             cMin = costs[xNearIndex] + distance(nodes[xNearIndex], newNode); 
           } 
