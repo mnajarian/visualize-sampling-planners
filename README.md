@@ -1,4 +1,6 @@
 # visualize-sampling-planners
+## Maya Najarian
+## COMP 782 Final Project
 
 An interactive visualization of optimal sampling-based motion planning algorithms.
 
